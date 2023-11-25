@@ -27,7 +27,7 @@ const makeRequestMumbai = async () => {
         .readFileSync(path.resolve(__dirname, "../bundle.js"))
         .toString();
 
-    const args = ["1700732045", "1700732845"];
+    const args = ["1700732245", "1700732845"];
     const gasLimit = 300000;
 
     // Initialize ethers signer and provider to interact with the contracts onchain

@@ -1,5 +1,6 @@
 const nodeResolve = require('@rollup/plugin-node-resolve');
 const terser = require('@rollup/plugin-terser');
+const swc = require("@rollup/plugin-swc")
 
 function postprocess() {
     return {
@@ -16,7 +17,24 @@ exports.default = {
         file: 'bundle.js',
         format: 'iife',
         name: "bundle",
-        plugins: [terser({})]
+        plugins: [terser({
+            compress: false,
+            format: {
+                comments: false
+            }
+        })]
     },
-    plugins: [nodeResolve(), postprocess()]
+    plugins: [nodeResolve(), swc({
+        include: "*/**/*.ts",
+        swc: {
+            jsc: {
+                parser: {
+                    syntax: "typescript"
+                },
+                target: "esnext",
+                loose: true
+            },
+            minify: true
+        }
+    }), postprocess()]
 };
