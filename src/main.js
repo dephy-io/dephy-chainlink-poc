@@ -1,8 +1,11 @@
-import {SignedMessage, RawMessage} from "dephy-proto"
+//import {SignedMessage, RawMessage} from "dephy-proto"
+import * as SignedMessage from './proto/messages/dephy/message/SignedMessage.ts'
+import * as RawMessage from './proto/messages/dephy/message/RawMessage.ts'
+//
 import {base58_to_binary} from "base58-js";
 import {hexToBytes} from "ethereum-cryptography/utils";
 import {keccak256} from "ethereum-cryptography/keccak";
-import {secp256k1} from "ethereum-cryptography/secp256k1";
+import {Signature} from "@noble/secp256k1";
 
 export default async function main() {
     const metadataRes = await Functions.makeHttpRequest({
@@ -110,7 +113,7 @@ function verifyEvent(e) {
         throw new Error("Bad create_at value")
     }
 
-    const sign = secp256k1.Signature.fromCompact(signedMsg.signature.slice(0, 64)).addRecoveryBit(signedMsg.signature[64])
+    const sign = Signature.fromCompact(signedMsg.signature.slice(0, 64)).addRecoveryBit(signedMsg.signature[64])
     const rPk = sign.recoverPublicKey(keccak256(signedMsg.hash)).toRawBytes(false)
     const rAddr = keccak256(rPk.slice(1)).slice(12)
 
