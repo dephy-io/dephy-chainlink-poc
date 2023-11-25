@@ -12,8 +12,8 @@ const functionsConsumerAbi = require("../abi/functionsClient.json");
 const ethers = require("ethers");
 require("dotenv").config();
 
-const consumerAddress = "0xD368fc8122aC18c9323f0767662844903666f505"; // REPLACE this with your Functions consumer address
-const subscriptionId = 907; // REPLACE this with your subscription ID
+const consumerAddress = process.env.CL_CONSUMER_ADDRESS;
+const subscriptionId = parseInt(process.env.CL_SUB_ID);
 
 const makeRequestMumbai = async () => {
     // hardcoded for Polygon Mumbai
