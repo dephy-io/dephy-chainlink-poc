@@ -25,7 +25,6 @@ exports.default = {
         })]
     },
     plugins: [nodeResolve(), swc({
-        include: "*/**/*.ts",
         swc: {
             jsc: {
                 parser: {
