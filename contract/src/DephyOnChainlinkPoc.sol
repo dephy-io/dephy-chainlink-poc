@@ -40,7 +40,7 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     event Response(bytes32 indexed requestId, bytes response, bytes err);
     event RequestRevertedWithErrorMsg(string reason);
     event RequestRevertedWithoutErrorMsg(bytes data);
-    event Miao(bytes32 indexed requestId);
+    event ResponseWritten(bytes32 indexed requestId, bytes response, uint256 responseCount);
 
     constructor(address router) FunctionsClient(router) ConfirmedOwner(msg.sender) {}
 
@@ -131,8 +131,7 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
         s_responseCounter = s_responseCounter + 1;
 
         proofs[s_responseCounter] = response;
-
-        emit Miao(requestId);
+        emit ResponseWritten(requestId, response, s_responseCounter);
         emit Response(requestId, s_lastResponse, s_lastError);
     }
 
