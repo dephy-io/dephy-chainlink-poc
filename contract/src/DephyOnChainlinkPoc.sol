@@ -33,6 +33,8 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     uint256 public s_responseCounter;
 
     uint256 public d_lastNostrTimestamp;
+    uint256 public d_lastNostrTimestamp__before;
+    bool public d_lastFailed;
     mapping(uint256 => bytes) public proofs;
 
     error UnexpectedRequestID(bytes32 requestId);
@@ -44,6 +46,8 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
 
     constructor(address router) FunctionsClient(router) ConfirmedOwner(msg.sender) {
         d_lastNostrTimestamp = 1698469291;
+        d_lastNostrTimestamp__before = 0;
+        d_lastFailed = false;
     }
 
     /**
@@ -73,10 +77,14 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
             req.source = source;
             req.language = FunctionsRequest.CodeLanguage.JavaScript;
 
-            string memory from = Integers.toString(d_lastNostrTimestamp);
-            uint256 toTs = (block.timestamp - d_lastNostrTimestamp > 5 minutes)
-                ? d_lastNostrTimestamp + 5 minutes
-                : block.timestamp;
+            string memory from = Integers.toString(d_lastFailed ? d_lastNostrTimestamp__before : d_lastNostrTimestamp);
+            uint256 toTs = d_lastFailed
+                ? d_lastNostrTimestamp
+                : (
+                    (block.timestamp - d_lastNostrTimestamp > 5 minutes)
+                        ? d_lastNostrTimestamp + 5 minutes
+                        : block.timestamp
+                );
             string memory to = Integers.toString(toTs);
             string[] memory reqArgs = new string[](2);
             reqArgs[0] = from;
@@ -91,6 +99,9 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
             ) returns (bytes32 requestId) {
                 s_lastRequestId = requestId;
                 s_requestCounter = s_requestCounter + 1;
+                if (d_lastFailed == false) {
+                    d_lastNostrTimestamp__before = d_lastNostrTimestamp;
+                }
                 d_lastNostrTimestamp = toTs;
                 emit RequestSent(requestId);
             } catch Error(string memory reason) {
@@ -129,13 +140,19 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
         if (s_lastRequestId != requestId) {
             revert UnexpectedRequestID(requestId);
         }
+
         s_lastResponse = response;
         s_lastError = err;
-        s_responseCounter = s_responseCounter + 1;
 
-        proofs[s_responseCounter] = response;
-        emit ResponseWritten(requestId, response, s_responseCounter);
-        emit Response(requestId, s_lastResponse, s_lastError);
+        if (response.length > 0) {
+            s_responseCounter = s_responseCounter + 1;
+            proofs[d_lastNostrTimestamp] = response;
+            d_lastFailed = false;
+            emit ResponseWritten(requestId, response, d_lastNostrTimestamp);
+        } else {
+            d_lastFailed = true;
+            emit Response(requestId, s_lastResponse, s_lastError);
+        }
     }
 
     function encodeCBOR(FunctionsRequest.Request memory self) internal pure returns (bytes memory) {
