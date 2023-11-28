@@ -1,10 +1,11 @@
 const fs = require("fs");
 const path = require("path");
-const automatedFunctionsConsumerAbi = require("../abi/automatedFunctions.json");
+const automatedFunctionsConsumerAbi = require("../contract/out/DephyOnChainlinkPoc.sol/DephyOnChainlinkPoc.json").abi;
+//const automatedFunctionsConsumerAbi = require("../abi/automatedFunctions.json");
 const ethers = require("ethers");
 require("dotenv").config();
 
-const consumerAddress = "0x5d5e5bBbb97d4FD080A83A2074c3aed32AB72266";
+const consumerAddress = "0xBad97b14866fd08616ee97Ba244aF21BD063d1a9";
 const subscriptionId = 907;
 
 const updateRequestMumbai = async () => {
@@ -18,9 +19,12 @@ const updateRequestMumbai = async () => {
     const explorerUrl = "https://mumbai.polygonscan.com";
 
     // Initialize functions settings
+//    const source = "0x" + fs
+//        .readFileSync(path.resolve(__dirname, "../dist/main.js"))
+//        .toString('hex');
     const source = "0x" + fs
         .readFileSync(path.resolve(__dirname, "../dist/main.js"))
-        .toString('hex');
+        .toString('utf-8');
 
     const args = ["1700732245", "1700732845"];
     const secrets = {dephy: 'dephy'};
@@ -89,9 +93,11 @@ const updateRequestMumbai = async () => {
     );
 
     // Log transaction details
+    console.log(transaction)
     console.log(
         `\n✅ Automated Functions request settings updated! Transaction hash ${transaction.hash} - Check the explorer ${explorerUrl}/tx/${transaction.hash}`
     );
+    console.log(await transaction.wait())
 };
 
 updateRequestMumbai().catch((e) => {

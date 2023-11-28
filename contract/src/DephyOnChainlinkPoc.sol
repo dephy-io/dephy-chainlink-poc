@@ -42,7 +42,9 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     event RequestRevertedWithoutErrorMsg(bytes data);
     event ResponseWritten(bytes32 indexed requestId, bytes response, uint256 responseCount);
 
-    constructor(address router) FunctionsClient(router) ConfirmedOwner(msg.sender) {}
+    constructor(address router) FunctionsClient(router) ConfirmedOwner(msg.sender) {
+        d_lastNostrTimestamp = 1698469291;
+    }
 
     /**
      * @notice Checks if upkeep is needed based on the difference between the current and the last block number.
@@ -56,7 +58,7 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        upkeepNeeded = block.number - lastBlockNumber > 0; // Check if the current block number has incremented since the last recorded block number
+        upkeepNeeded = (block.number - lastBlockNumber > 0) && (block.timestamp - d_lastNostrTimestamp >= 5 minutes); // Check if the current block number has incremented since the last recorded block number
         // We don't use the checkData in this example. The checkData is defined when the Upkeep was registered.
         return (upkeepNeeded, ""); // Return an empty bytes value for performData
     }
@@ -72,10 +74,10 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
             req.language = FunctionsRequest.CodeLanguage.JavaScript;
 
             string memory from = Integers.toString(d_lastNostrTimestamp);
-            string memory to = (block.timestamp - d_lastNostrTimestamp > 5 minutes)
-                ? Integers.toString(d_lastNostrTimestamp + 5 minutes)
-                : Integers.toString(block.timestamp);
-
+            uint256 toTs = (block.timestamp - d_lastNostrTimestamp > 5 minutes)
+                ? d_lastNostrTimestamp + 5 minutes
+                : block.timestamp;
+            string memory to = Integers.toString(toTs);
             string[] memory reqArgs = new string[](2);
             reqArgs[0] = from;
             reqArgs[1] = to;
@@ -89,6 +91,7 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
             ) returns (bytes32 requestId) {
                 s_lastRequestId = requestId;
                 s_requestCounter = s_requestCounter + 1;
+                d_lastNostrTimestamp = toTs;
                 emit RequestSent(requestId);
             } catch Error(string memory reason) {
                 emit RequestRevertedWithErrorMsg(reason);
