@@ -1,11 +1,11 @@
-//import {SignedMessage, RawMessage} from "dephy-proto"
 import * as SignedMessage from './proto/messages/dephy/message/SignedMessage.ts'
 import * as RawMessage from './proto/messages/dephy/message/RawMessage.ts'
-//
 import {base58_to_binary} from "base58-js";
 import {hexToBytes} from "ethereum-cryptography/utils";
 import {keccak256} from "ethereum-cryptography/keccak";
 import {Signature} from "@noble/secp256k1";
+
+const enc = new TextEncoder();
 
 export default async function main() {
     const metadataRes = await Functions.makeHttpRequest({
@@ -54,12 +54,10 @@ export default async function main() {
         throw new Error("Event verification failed")
     }
 
-    return Functions.encodeString(cid);
+    return Functions.encodeString(cid)
 }
 
 function verifyEvent(e) {
-    const enc = new TextEncoder();
-
     if (e.kind !== 1111) {
         throw new Error('Bad event kind')
     }

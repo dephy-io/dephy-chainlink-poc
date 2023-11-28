@@ -7,3 +7,6 @@
 [submodule "contract/lib/chainlink"]
 	path = contract/lib/chainlink
 	url = https://github.com/smartcontractkit/chainlink
+[submodule "contract/lib/solidity-util"]
+	path = contract/lib/solidity-util
+	url = https://github.com/willitscale/solidity-util

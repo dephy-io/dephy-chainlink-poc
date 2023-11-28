@@ -24,7 +24,7 @@ const makeRequestMumbai = async () => {
 
     // Initialize functions settings
     const source = fs
-        .readFileSync(path.resolve(__dirname, "../bundle.js"))
+        .readFileSync(path.resolve(__dirname, "../dist/main.js"))
         .toString();
 
     const args = ["1700732245", "1700732845"];
