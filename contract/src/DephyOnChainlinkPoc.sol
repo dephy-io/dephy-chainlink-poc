@@ -6,7 +6,6 @@ import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/autom
 import {ConfirmedOwner} from "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol";
 import {FunctionsRequest} from "@chainlink/contracts/src/v0.8/functions/v1_0_0/libraries/FunctionsRequest.sol";
 import {CBOR} from "@chainlink/contracts/src/v0.8/vendor/solidity-cborutils/v2.0.0/CBOR.sol";
-import {Integers} from "./Integers.sol";
 
 /**
  * @title Functions contract used for Automation.
@@ -16,6 +15,8 @@ import {Integers} from "./Integers.sol";
 
 contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, ConfirmedOwner {
     using CBOR for CBOR.CBORBuffer;
+
+    bytes16 private constant _SYMBOLS = "0123456789abcdef";
 
     uint16 public constant REQUEST_DATA_VERSION = 1;
     uint256 internal constant DEFAULT_BUFFER_SIZE = 256;
@@ -35,6 +36,8 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     uint256 public d_lastNostrTimestamp;
     uint256 public d_lastNostrTimestamp__before;
     bool public d_lastFailed;
+    bool public requesting;
+
     mapping(uint256 => bytes) public proofs;
 
     error UnexpectedRequestID(bytes32 requestId);
@@ -64,49 +67,55 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     {
         upkeepNeeded = (block.number - lastBlockNumber > 0) && (block.timestamp - d_lastNostrTimestamp >= 5 minutes); // Check if the current block number has incremented since the last recorded block number
         // We don't use the checkData in this example. The checkData is defined when the Upkeep was registered.
-        return (upkeepNeeded, ""); // Return an empty bytes value for performData
+        return (upkeepNeeded && !requesting, ""); // Return an empty bytes value for performData
+    }
+
+    function encodeRequest(uint256 toTs) public returns (bytes memory) {
+        FunctionsRequest.Request memory req;
+        req.codeLocation = FunctionsRequest.Location.Inline;
+        req.source = source;
+        req.language = FunctionsRequest.CodeLanguage.JavaScript;
+
+        string memory from = uintToString(d_lastFailed ? d_lastNostrTimestamp__before : d_lastNostrTimestamp);
+        string memory to = uintToString(toTs);
+        string[] memory reqArgs = new string[](2);
+        reqArgs[0] = from;
+        reqArgs[1] = to;
+        req.args = reqArgs;
+
+        lastBlockNumber = block.number;
+        s_upkeepCounter = s_upkeepCounter + 1;
+        return encodeCBOR(req);
     }
 
     /**
      * @notice Send a pre-encoded CBOR request if the current block number has incremented since the last recorded block number.
      */
     function performUpkeep(bytes calldata /* performData */ ) external override {
-        if ((block.number - lastBlockNumber > 0) && (block.timestamp - d_lastNostrTimestamp >= 5 minutes)) {
-            FunctionsRequest.Request memory req;
-            req.codeLocation = FunctionsRequest.Location.Inline;
-            req.source = source;
-            req.language = FunctionsRequest.CodeLanguage.JavaScript;
-
-            string memory from = Integers.toString(d_lastFailed ? d_lastNostrTimestamp__before : d_lastNostrTimestamp);
+        if (!requesting && (int256(block.timestamp) - int256(d_lastNostrTimestamp) >= 5 minutes)) {
             uint256 toTs = d_lastFailed
                 ? d_lastNostrTimestamp
                 : (
-                    (block.timestamp - d_lastNostrTimestamp > 5 minutes)
-                        ? d_lastNostrTimestamp + 5 minutes
+                    (int256(block.timestamp) - int256(d_lastNostrTimestamp) > 30 minutes)
+                        ? d_lastNostrTimestamp + 30 minutes
                         : block.timestamp
                 );
-            string memory to = Integers.toString(toTs);
-            string[] memory reqArgs = new string[](2);
-            reqArgs[0] = from;
-            reqArgs[1] = to;
-            req.args = reqArgs;
-
-            lastBlockNumber = block.number;
-            s_upkeepCounter = s_upkeepCounter + 1;
-
-            try i_router.sendRequest(
-                subscriptionId, encodeCBOR(req), FunctionsRequest.REQUEST_DATA_VERSION, gasLimit, donID
-            ) returns (bytes32 requestId) {
+            bytes memory req = encodeRequest(toTs);
+            try i_router.sendRequest(subscriptionId, req, FunctionsRequest.REQUEST_DATA_VERSION, gasLimit, donID)
+            returns (bytes32 requestId) {
                 s_lastRequestId = requestId;
                 s_requestCounter = s_requestCounter + 1;
                 if (d_lastFailed == false) {
                     d_lastNostrTimestamp__before = d_lastNostrTimestamp;
                 }
+                requesting = true;
                 d_lastNostrTimestamp = toTs;
                 emit RequestSent(requestId);
             } catch Error(string memory reason) {
+                requesting = true;
                 emit RequestRevertedWithErrorMsg(reason);
             } catch (bytes memory data) {
+                requesting = true;
                 emit RequestRevertedWithoutErrorMsg(data);
             }
         }
@@ -140,6 +149,7 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
         if (s_lastRequestId != requestId) {
             revert UnexpectedRequestID(requestId);
         }
+        requesting = false;
 
         s_lastResponse = response;
         s_lastError = err;
@@ -196,5 +206,61 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
         }
 
         return buffer.buf.buf;
+    }
+
+    function uintToString(uint256 value) internal pure returns (string memory) {
+        unchecked {
+            uint256 length = log10(value) + 1;
+            string memory buffer = new string(length);
+            uint256 ptr;
+            /// @solidity memory-safe-assembly
+            assembly {
+                ptr := add(buffer, add(32, length))
+            }
+            while (true) {
+                ptr--;
+                /// @solidity memory-safe-assembly
+                assembly {
+                    mstore8(ptr, byte(mod(value, 10), _SYMBOLS))
+                }
+                value /= 10;
+                if (value == 0) break;
+            }
+            return buffer;
+        }
+    }
+
+    function log10(uint256 value) internal pure returns (uint256) {
+        uint256 result = 0;
+        unchecked {
+            if (value >= 10 ** 64) {
+                value /= 10 ** 64;
+                result += 64;
+            }
+            if (value >= 10 ** 32) {
+                value /= 10 ** 32;
+                result += 32;
+            }
+            if (value >= 10 ** 16) {
+                value /= 10 ** 16;
+                result += 16;
+            }
+            if (value >= 10 ** 8) {
+                value /= 10 ** 8;
+                result += 8;
+            }
+            if (value >= 10 ** 4) {
+                value /= 10 ** 4;
+                result += 4;
+            }
+            if (value >= 10 ** 2) {
+                value /= 10 ** 2;
+                result += 2;
+            }
+            if (value >= 10 ** 1) {
+                result += 1;
+            }
+        }
+        return result;
     }
 }

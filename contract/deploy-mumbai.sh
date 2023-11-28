@@ -1,0 +1,2 @@
+source env.sh
+forge create DephyOnChainlinkPoc --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY --constructor-args 0x6E2dc0F9DB014aE19888F539E59285D2Ea04244C --verifier-url https://api-testnet.polygonscan.com/api -c 80001 --verify -e=$POLYGONSCAN_API_KEY

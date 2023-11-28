@@ -1,0 +1,2 @@
+source env.sh
+forge create DephyOnChainlinkPoc --rpc-url=https://eth-sepolia.g.alchemy.com/v2/Sf0kqnaEayUVWQu_D4jC_1iT7tk5DkFQ --private-key=$PRIVATE_KEY --constructor-args 0xb83E47C2bC239B3bf370bc41e1459A34b41238D0 --verifier-url https://api-sepolia.etherscan.io/api -c 11155111 --verify -e=$ETHERSCAN_API_KEY

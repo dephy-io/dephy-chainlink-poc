@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.10;
 
-import {Test, console2} from "forge-std/Test.sol";
+import "forge-std/Test.sol";
 import {DephyOnChainlinkPoc} from "../src/DephyOnChainlinkPoc.sol";
 
-contract CounterTest is Test {
-    DephyOnChainlinkPoc public counter;
+contract DephyOnChainlinkPocTest is Test {
+    DephyOnChainlinkPoc public con;
 
-    // function setUp() public {
-    //     counter = new DephyOnChainlinkPoc();
-    //     counter.setNumber(0);
-    // }
+    function setUp() public {
+        con = new DephyOnChainlinkPoc(0xb83E47C2bC239B3bf370bc41e1459A34b41238D0);
+        con.updateRequest("return Functions.encodeString('Hello')", 1754, 500000, "fun-ethereum-sepolia-1");
+    }
 
-    // function test_Increment() public {
-    //     counter.increment();
-    //     assertEq(counter.number(), 1);
-    // }
+    function testCheckUpkeep() public {
+        (bool result,) = con.checkUpkeep("");
+        assertEq(result, true);
+    }
 
-    // function testFuzz_SetNumber(uint256 x) public {
-    //     counter.setNumber(x);
-    //     assertEq(counter.number(), x);
-    // }
+    function testPerform() public {
+        con.performUpkeep("");
+    }
 }
