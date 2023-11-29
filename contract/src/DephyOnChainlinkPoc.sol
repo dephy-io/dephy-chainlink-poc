@@ -13,7 +13,11 @@ import {CBOR} from "@chainlink/contracts/src/v0.8/vendor/solidity-cborutils/v2.0
  * @notice NOT FOR PRODUCTION USE
  */
 
-contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, ConfirmedOwner {
+contract DephyOnChainlinkPoc is
+    FunctionsClient,
+    AutomationCompatibleInterface,
+    ConfirmedOwner
+{
     using CBOR for CBOR.CBORBuffer;
 
     bytes16 private constant _SYMBOLS = "0123456789abcdef";
@@ -45,10 +49,16 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     event Response(bytes32 indexed requestId, bytes response, bytes err);
     event RequestRevertedWithErrorMsg(string reason);
     event RequestRevertedWithoutErrorMsg(bytes data);
-    event ResponseWritten(bytes32 indexed requestId, bytes response, uint256 responseCount);
+    event ResponseWritten(
+        bytes32 indexed requestId,
+        string cid,
+        uint256 indexed targetTimestamp
+    );
 
-    constructor(address router) FunctionsClient(router) ConfirmedOwner(msg.sender) {
-        d_lastNostrTimestamp = 1698469291;
+    constructor(
+        address router
+    ) FunctionsClient(router) ConfirmedOwner(msg.sender) {
+        d_lastNostrTimestamp = 1700323200;
         d_lastNostrTimestamp__before = 0;
         d_lastFailed = false;
     }
@@ -59,13 +69,17 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
      * @return upkeepNeeded A boolean indicating if upkeep is needed (true if the current block number has incremented since the last recorded block number).
      * @return performData An empty bytes value since no additional data is needed for the upkeep in this implementation.
      */
-    function checkUpkeep(bytes calldata /* checkData */ )
+    function checkUpkeep(
+        bytes calldata /* checkData */
+    )
         external
         view
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        upkeepNeeded = (block.number - lastBlockNumber > 0) && (block.timestamp - d_lastNostrTimestamp >= 5 minutes); // Check if the current block number has incremented since the last recorded block number
+        upkeepNeeded =
+            (block.number - lastBlockNumber > 0) &&
+            (block.timestamp - d_lastNostrTimestamp >= 5 minutes); // Check if the current block number has incremented since the last recorded block number
         // We don't use the checkData in this example. The checkData is defined when the Upkeep was registered.
         return (upkeepNeeded && !requesting, ""); // Return an empty bytes value for performData
     }
@@ -76,7 +90,9 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
         req.source = source;
         req.language = FunctionsRequest.CodeLanguage.JavaScript;
 
-        string memory from = uintToString(d_lastFailed ? d_lastNostrTimestamp__before : d_lastNostrTimestamp);
+        string memory from = uintToString(
+            d_lastFailed ? d_lastNostrTimestamp__before : d_lastNostrTimestamp
+        );
         string memory to = uintToString(toTs);
         string[] memory reqArgs = new string[](2);
         reqArgs[0] = from;
@@ -91,17 +107,29 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     /**
      * @notice Send a pre-encoded CBOR request if the current block number has incremented since the last recorded block number.
      */
-    function performUpkeep(bytes calldata /* performData */ ) external override {
-        if (!requesting && (int256(block.timestamp) - int256(d_lastNostrTimestamp) >= 5 minutes)) {
+    function performUpkeep(bytes calldata /* performData */) external override {
+        if (
+            !requesting &&
+            (int256(block.timestamp) - int256(d_lastNostrTimestamp) >=
+                30 minutes)
+        ) {
             uint256 toTs = d_lastFailed
                 ? d_lastNostrTimestamp
                 : (
-                    (int256(block.timestamp) - int256(d_lastNostrTimestamp) > 30 minutes)
+                    (int256(block.timestamp) - int256(d_lastNostrTimestamp) >
+                        30 minutes)
                         ? d_lastNostrTimestamp + 30 minutes
                         : block.timestamp
                 );
             bytes memory req = encodeRequest(toTs);
-            try i_router.sendRequest(subscriptionId, req, FunctionsRequest.REQUEST_DATA_VERSION, gasLimit, donID)
+            try
+                i_router.sendRequest(
+                    subscriptionId,
+                    req,
+                    FunctionsRequest.REQUEST_DATA_VERSION,
+                    gasLimit,
+                    donID
+                )
             returns (bytes32 requestId) {
                 s_lastRequestId = requestId;
                 s_requestCounter = s_requestCounter + 1;
@@ -128,10 +156,12 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
     /// @param _subscriptionId The new subscription ID to be set
     /// @param _gasLimit The new gas limit to be set
     /// @param _donID The new job ID to be set
-    function updateRequest(string memory _source, uint64 _subscriptionId, uint32 _gasLimit, bytes32 _donID)
-        external
-        onlyOwner
-    {
+    function updateRequest(
+        string memory _source,
+        uint64 _subscriptionId,
+        uint32 _gasLimit,
+        bytes32 _donID
+    ) external onlyOwner {
         source = _source;
         subscriptionId = _subscriptionId;
         gasLimit = _gasLimit;
@@ -145,7 +175,11 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
      * @param err Aggregated error from the user code or from the execution pipeline
      * Either response or error parameter will be set, but never both
      */
-    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
+    function fulfillRequest(
+        bytes32 requestId,
+        bytes memory response,
+        bytes memory err
+    ) internal override {
         if (s_lastRequestId != requestId) {
             revert UnexpectedRequestID(requestId);
         }
@@ -158,14 +192,20 @@ contract DephyOnChainlinkPoc is FunctionsClient, AutomationCompatibleInterface, 
             s_responseCounter = s_responseCounter + 1;
             proofs[d_lastNostrTimestamp] = response;
             d_lastFailed = false;
-            emit ResponseWritten(requestId, response, d_lastNostrTimestamp);
+            emit ResponseWritten(
+                requestId,
+                string(response),
+                d_lastNostrTimestamp
+            );
         } else {
             d_lastFailed = true;
             emit Response(requestId, s_lastResponse, s_lastError);
         }
     }
 
-    function encodeCBOR(FunctionsRequest.Request memory self) internal pure returns (bytes memory) {
+    function encodeCBOR(
+        FunctionsRequest.Request memory self
+    ) internal pure returns (bytes memory) {
         CBOR.CBORBuffer memory buffer = CBOR.create(DEFAULT_BUFFER_SIZE);
 
         buffer.writeString("codeLocation");

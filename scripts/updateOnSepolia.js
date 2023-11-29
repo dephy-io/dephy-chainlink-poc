@@ -5,7 +5,7 @@ const automatedFunctionsConsumerAbi = require("../contract/out/DephyOnChainlinkP
 const ethers = require("ethers");
 require("dotenv").config();
 
-const consumerAddress = "0x39Fa715f5dc9195921553db171D0BF0954aAc68B";
+const consumerAddress = "0x01490eA5C6e2A47Cd85C1F50Bb3c2EFc7a92c5D6";
 const subscriptionId = 1754;
 
 const updateRequestSepolia = async () => {
@@ -22,11 +22,11 @@ const updateRequestSepolia = async () => {
     //    const source = "0x" + fs
     //        .readFileSync(path.resolve(__dirname, "../dist/main.js"))
     //        .toString('hex');
-    const source = "0x" + fs
+    const source = fs
         .readFileSync(path.resolve(__dirname, "../dist/main.js"))
         .toString('utf-8');
 
-//    const gasLimit = 500000;
+    //    const gasLimit = 500000;
     const gasLimit = 300000;
 
 

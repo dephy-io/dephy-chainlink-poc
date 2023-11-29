@@ -1,9 +1,9 @@
 import * as SignedMessage from './proto/messages/dephy/message/SignedMessage.ts'
 import * as RawMessage from './proto/messages/dephy/message/RawMessage.ts'
-import {base58_to_binary} from "base58-js";
-import {hexToBytes} from "ethereum-cryptography/utils";
-import {keccak256} from "ethereum-cryptography/keccak";
-import {Signature} from "@noble/secp256k1";
+import { base58_to_binary } from "base58-js";
+import { hexToBytes } from "ethereum-cryptography/utils";
+import { keccak256 } from "ethereum-cryptography/keccak";
+import { Signature } from "@noble/secp256k1";
 
 const enc = new TextEncoder();
 
