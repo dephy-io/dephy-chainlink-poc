@@ -140,10 +140,10 @@ contract DephyOnChainlinkPoc is
                 d_lastNostrTimestamp = toTs;
                 emit RequestSent(requestId);
             } catch Error(string memory reason) {
-                requesting = true;
+                requesting = false;
                 emit RequestRevertedWithErrorMsg(reason);
             } catch (bytes memory data) {
-                requesting = true;
+                requesting = false;
                 emit RequestRevertedWithoutErrorMsg(data);
             }
         }

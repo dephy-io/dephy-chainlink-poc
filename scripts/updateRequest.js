@@ -5,7 +5,7 @@ const automatedFunctionsConsumerAbi = require("../contract/out/DephyOnChainlinkP
 const ethers = require("ethers");
 require("dotenv").config();
 
-const consumerAddress = "0x08fcf49207cE351EF9695847B96305129587426A";
+const consumerAddress = "0xDe392AcD1Dec4f8ebb088AE6E993F2dbf7BB5304";
 const subscriptionId = 907;
 
 const updateRequestMumbai = async () => {

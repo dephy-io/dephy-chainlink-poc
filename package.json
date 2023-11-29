@@ -2,6 +2,7 @@
   "name": "dephy-chainlink-poc",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "source": "src/main.js",
   "main": "dist/main.js",
   "scripts": {
