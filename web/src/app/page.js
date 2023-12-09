@@ -4,10 +4,11 @@ import "server-only";
 import { Text, Title, TextInput, Button, Image, Container } from '@mantine/core';
 import classes from './global.module.css';
 import { DataTable } from '../comp/DataTable';
+import { cache } from 'react'
 
 export const revalidate = 600;
 
-async function getData() {
+export const getData = cache(async () => {
   const { rows } = await sql`SELECT * FROM "LastEvent" ORDER BY "eventCreatedAt" DESC;`
   return rows.map(i => {
     return {
@@ -17,7 +18,7 @@ async function getData() {
       avgPf: i.value.data.reduce((prev, curr) => prev + curr.pf, 0) / 5,
     }
   }).sort((a, b) => a.avgPf > b.avgPf ? -1 : 1)
-}
+})
 
 export default async function Home() {
   const data = await getData()
