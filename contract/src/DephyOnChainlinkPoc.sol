@@ -58,7 +58,7 @@ contract DephyOnChainlinkPoc is
     constructor(
         address router
     ) FunctionsClient(router) ConfirmedOwner(msg.sender) {
-        d_lastNostrTimestamp = 1700323200;
+        d_lastNostrTimestamp = 1702083600;
         d_lastNostrTimestamp__before = 0;
         d_lastFailed = false;
     }

@@ -5,13 +5,14 @@ const automatedFunctionsConsumerAbi = require("../contract/out/DephyOnChainlinkP
 const ethers = require("ethers");
 require("dotenv").config();
 
-const consumerAddress = "0xAAF7dCE2321B7C58D9f695aB24f868F9Da76B361";
+const consumerAddress = "0xCb98C807DbF722fE2107ABaC89Dc71f8229Efb6e";
 const subscriptionId = 907;
 
 const updateRequestMumbai = async () => {
     // hardcoded for Polygon Mumbai
     //    const routerAddress = "0x6E2dc0F9DB014aE19888F539E59285D2Ea04244C";
     const donId = "fun-polygon-mumbai-1";
+    console.log(`don ID: `, ethers.utils.formatBytes32String(donId));
     //    const gatewayUrls = [
     //        "https://01.functions-gateway.testnet.chain.link/",
     //        "https://02.functions-gateway.testnet.chain.link/"
