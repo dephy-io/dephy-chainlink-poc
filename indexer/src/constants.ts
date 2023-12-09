@@ -8,6 +8,6 @@ export const START_BLOCK_BN = BigInt(
 export const ZERO_ADDR = "0x0000000000000000000000000000000000000000" as const;
 export const LOGGER_LEVEL = process.env.LOGGER_LEVEL ?? "info";
 
-export const ADDRESS = "0x01490eA5C6e2A47Cd85C1F50Bb3c2EFc7a92c5D6";
+export const ADDRESS = "0x76192D5D812E4F6120a7D6b9E1793E3Bf982074B";
 
 export type EthAddress = `0x${string}`;

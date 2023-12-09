@@ -8,10 +8,11 @@ import { cache } from 'react'
 
 export const revalidate = 600;
 
-export const getData = cache(async () => {
+export const getData = cache(async (r) => {
   const { rows } = await sql`SELECT * FROM "LastEvent" ORDER BY "eventCreatedAt" DESC;`
   return rows.map(i => {
     return {
+      r,
       ...i,
       address: i.from.replace('did:dephy:', ''),
       avgPower: i.value.data.reduce((prev, curr) => prev + curr.power, 0) / 5,
@@ -20,8 +21,8 @@ export const getData = cache(async () => {
   }).sort((a, b) => a.avgPf > b.avgPf ? -1 : 1)
 })
 
-export default async function Home() {
-  const data = await getData()
+export default async function Home({ searchParams: { r } }) {
+  const data = await getData(r)
   const t = new Date();
 
   return <>

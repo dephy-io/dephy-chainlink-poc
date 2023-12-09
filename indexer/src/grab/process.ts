@@ -55,7 +55,10 @@ async function processLog(log: GetLogsReturnItemType) {
   });
   const buf = await req.text();
   const calCid = await ipfsHasher.of(buf);
-  if (calCid !== log.args.cid) throw new Error("Bad data or CID!");
+  if (calCid !== log.args.cid) {
+    logger.error("Bad data or CID!", log);
+    return;
+  }
 
   const events: any[] = JSON.parse(buf).events;
 
