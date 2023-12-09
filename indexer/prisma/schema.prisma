@@ -11,6 +11,25 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
+model LastEvent {
+  id             BigInt @id @default(autoincrement())
+  value          Json
+  eventCreatedAt Int
+  from           String @unique
+  cid            String
+  blockNumber    BigInt
+  blockHash      String
+  txHash         String
+  requestId      String
+
+  @@index([eventCreatedAt])
+  @@index([from])
+  @@index([cid])
+  @@index([blockNumber])
+  @@index([blockHash])
+  @@index([txHash])
+}
+
 model Config {
   id        Int      @id @default(autoincrement())
   key       String   @unique

@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+message ReportMessage {
+  repeated Report data = 1;
+  required float high_temp = 2;
+  repeated bytes ble_mac_list = 3;
+  repeated bytes wifi_mac_list = 4;
+  required uint64 timestamp = 5;
+  required bool ps_on = 6;
+}
+
+message Report {
+  required float curr = 1;
+  required float volt = 2;
+  required float power = 3;
+  required float pf = 4;
+  required float delta_energy = 5;
+}

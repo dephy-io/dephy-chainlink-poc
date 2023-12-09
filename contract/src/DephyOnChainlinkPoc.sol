@@ -79,7 +79,7 @@ contract DephyOnChainlinkPoc is
     {
         upkeepNeeded =
             (block.number - lastBlockNumber > 0) &&
-            (block.timestamp - d_lastNostrTimestamp >= 5 minutes); // Check if the current block number has incremented since the last recorded block number
+            (block.timestamp - d_lastNostrTimestamp >= 30 minutes); // Check if the current block number has incremented since the last recorded block number
         // We don't use the checkData in this example. The checkData is defined when the Upkeep was registered.
         return (upkeepNeeded && !requesting, ""); // Return an empty bytes value for performData
     }
@@ -201,6 +201,10 @@ contract DephyOnChainlinkPoc is
             d_lastFailed = true;
             emit Response(requestId, s_lastResponse, s_lastError);
         }
+    }
+
+    function forceSetRequesting(bool r) external onlyOwner {
+        requesting = r;
     }
 
     function encodeCBOR(

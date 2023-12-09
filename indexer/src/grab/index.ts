@@ -19,14 +19,14 @@ logger.info(
   }ms.`
 );
 
-// await setKey(K_PROCESSED_HEIGHT, historicalHeight.toString());
-// processedHeight = historicalHeight;
+await setKey(K_PROCESSED_HEIGHT, historicalHeight.toString());
+processedHeight = historicalHeight;
 
-// while (true) {
-//   const t1 = Date.now();
-//   await processBlock(processedHeight + 1n);
-//   const t2 = Date.now();
-//   processedHeight = processedHeight + 1n;
-//   logger.info(`Processed block ${processedHeight} in ${t2 - t1}ms.`);
-//   await setKey(K_PROCESSED_HEIGHT, processedHeight.toString());
-// }
+while (true) {
+  const t1 = Date.now();
+  await processBlock(processedHeight + 1n);
+  const t2 = Date.now();
+  processedHeight = processedHeight + 1n;
+  logger.info(`Processed block ${processedHeight} in ${t2 - t1}ms.`);
+  await setKey(K_PROCESSED_HEIGHT, processedHeight.toString());
+}

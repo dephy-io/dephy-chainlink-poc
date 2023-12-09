@@ -5,7 +5,7 @@ const automatedFunctionsConsumerAbi = require("../contract/out/DephyOnChainlinkP
 const ethers = require("ethers");
 require("dotenv").config();
 
-const consumerAddress = "0xDe392AcD1Dec4f8ebb088AE6E993F2dbf7BB5304";
+const consumerAddress = "0xAAF7dCE2321B7C58D9f695aB24f868F9Da76B361";
 const subscriptionId = 907;
 
 const updateRequestMumbai = async () => {
@@ -89,7 +89,7 @@ const updateRequestMumbai = async () => {
         source,
         subscriptionId,
         gasLimit,
-        ethers.utils.formatBytes32String(donId) // jobId is bytes32 representation of donId
+        ethers.utils.formatBytes32String(donId), // jobId is bytes32 representation of donId
     );
 
     // Log transaction details
